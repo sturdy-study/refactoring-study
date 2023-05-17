@@ -7,23 +7,10 @@ def statement(invoice, plays)
 
   invoice["performances"].each do |perf|
     play = plays[perf["playID"]]
-    this_amount = 0
 
-    case play["type"]
-    when "tragedy"
-      this_amount = 40000
-      if perf["audience"] > 30
-        this_amount += 1000 * (perf["audience"] - 30)
-      end
-    when "comedy"
-      this_amount = 30000
-      if perf["audience"] > 20
-        this_amount += 10000 + 500 * (perf["audience"] - 20)
-      end
-      this_amount += 300 * perf["audience"]
-    else
-      raise "알 수 없는 장르: #{play["type"]}"
-    end
+    # 금액 계산
+    this_amount = calculate_amount(perf, play)
+
     # 포인트를 적립한다.
     volume_credits += [perf["audience"] - 30, 0].max
     # 희극 관객 5명마다 추가 포인트를 제공한다.
@@ -39,6 +26,29 @@ def statement(invoice, plays)
 
   result
 end
+
+def calculate_amount(perf, play)
+  this_amount = 0
+
+  case play["type"]
+  when "tragedy"
+    this_amount = 40000
+    if perf["audience"] > 30
+      this_amount += 1000 * (perf["audience"] - 30)
+    end
+  when "comedy"
+    this_amount = 30000
+    if perf["audience"] > 20
+      this_amount += 10000 + 500 * (perf["audience"] - 20)
+    end
+    this_amount += 300 * perf["audience"]
+  else
+    raise "알 수 없는 장르: #{play["type"]}"
+  end
+
+  this_amount
+end
+
 
 # data
 invoices = JSON.parse(File.read('./invoices.json'))
