@@ -3,7 +3,7 @@ require 'json'
 def statement(invoice, plays)
   total_amount = 0
   volume_credits = 0
-  result = "청구 내역 (고객명: #{invoice[:customer]})\n"
+  billing_histories = ""
 
   invoice[:performances].each do |perf|
     play = plays[perf[:playID].to_sym]
@@ -15,15 +15,12 @@ def statement(invoice, plays)
     volume_credits += accumulate_credit(perf, play, volume_credits)
 
     # 청구 내역을 출력한다.
-    result += billing_history_view(perf, play, this_amount)
+    billing_histories += billing_history_view(perf, play, this_amount)
 
     total_amount += this_amount
   end
 
-  result += "총액: $#{'%.2f' % (total_amount / 100)}\n"
-  result += "적립 포인트: #{volume_credits}점\n"
-
-  result
+  result_view(total_amount, volume_credits, invoice, billing_histories)
 end
 
 def accumulate_credit(perf, play, volume_credits)
@@ -54,6 +51,18 @@ def calculate_amount(perf, play)
   end
 
   this_amount
+end
+
+def result_view(total_amount, volume_credits, invoice, billing_histories)
+  result = "청구 내역 (고객명: #{invoice[:customer]})\n"
+
+  # 청구 내역 리스트
+  result += billing_histories
+
+  result += "총액: $#{'%.2f' % (total_amount / 100)}\n"
+  result += "적립 포인트: #{volume_credits}점\n"
+
+  result
 end
 
 def billing_history_view(perf, play, this_amount)
