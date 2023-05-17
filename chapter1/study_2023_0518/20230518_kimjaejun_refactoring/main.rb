@@ -12,7 +12,9 @@ def statement(invoice, plays)
     this_amount = calculate_amount(perf, play)
 
     # 포인트 적립
-    volume_credits += accumulate_credit(perf, play, volume_credits)
+    volume_credits += [perf[:audience] - 30, 0].max
+    # 희극 관객 5명마다 추가 포인트를 제공한다.
+    volume_credits += (perf[:audience] / 5).floor(2) if "comedy" == play[:type]
 
     # 청구 내역을 출력한다.
     billing_histories += billing_history_view(perf, play, this_amount)
@@ -23,13 +25,13 @@ def statement(invoice, plays)
   result_view(total_amount, volume_credits, invoice, billing_histories)
 end
 
-def accumulate_credit(perf, play, volume_credits)
-  volume_credits += [perf[:audience] - 30, 0].max
-  # 희극 관객 5명마다 추가 포인트를 제공한다.
-  volume_credits += (perf[:audience] / 5).floor(2) if "comedy" == play[:type]
-
-  volume_credits
-end
+# def accumulate_credit(perf, play, volume_credits)
+#   volume_credits += [perf[:audience] - 30, 0].max
+#   # 희극 관객 5명마다 추가 포인트를 제공한다.
+#   volume_credits += (perf[:audience] / 5).floor(2) if "comedy" == play[:type]
+#
+#   volume_credits
+# end
 
 def calculate_amount(perf, play)
   this_amount = 0
