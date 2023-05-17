@@ -11,10 +11,8 @@ def statement(invoice, plays)
     # 금액 계산
     this_amount = calculate_amount(perf, play)
 
-    # 포인트를 적립한다.
-    volume_credits += [perf["audience"] - 30, 0].max
-    # 희극 관객 5명마다 추가 포인트를 제공한다.
-    volume_credits += (perf["audience"] / 5).floor(2) if "comedy" == play["type"]
+    # 포인트 적립
+    volume_credits += accumulate_credit(perf, play, volume_credits)
 
     # 청구 내역을 출력한다.
     result += "  #{play["name"]}: $#{'%.2f' % (this_amount / 100)} (#{perf["audience"]}석)\n"
@@ -25,6 +23,14 @@ def statement(invoice, plays)
   result += "적립 포인트: #{volume_credits}점\n"
 
   result
+end
+
+def accumulate_credit(perf, play, volume_credits)
+  volume_credits += [perf["audience"] - 30, 0].max
+  # 희극 관객 5명마다 추가 포인트를 제공한다.
+  volume_credits += (perf["audience"] / 5).floor(2) if "comedy" == play["type"]
+
+  volume_credits
 end
 
 def calculate_amount(perf, play)
