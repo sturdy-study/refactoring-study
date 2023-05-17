@@ -15,7 +15,8 @@ def statement(invoice, plays)
     volume_credits += accumulate_credit(perf, play, volume_credits)
 
     # 청구 내역을 출력한다.
-    result += "  #{play[:name]}: $#{'%.2f' % (this_amount / 100)} (#{perf[:audience]}석)\n"
+    result += billing_history_view(perf, play, this_amount)
+
     total_amount += this_amount
   end
 
@@ -53,6 +54,11 @@ def calculate_amount(perf, play)
   end
 
   this_amount
+end
+
+def billing_history_view(perf, play, this_amount)
+  # 청구 내역을 출력한다.
+  "  #{play[:name]}: $#{'%.2f' % (this_amount / 100)} (#{perf[:audience]}석)\n"
 end
 
 
