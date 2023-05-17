@@ -20,7 +20,7 @@ end
 def statement(invoice, plays)
   total_statement_amount = 0
   point_amount = 0
-  billing_histories = ""
+  billing_histories = []
 
   invoice[:performances].each do |performance|
     play_id = performance[:playID].to_sym
@@ -33,7 +33,7 @@ def statement(invoice, plays)
     point_amount += accumulate_points(performance, play)
 
     # 청구 내역을 출력한다.
-    billing_histories += billing_history_view(performance, play, play_admission_fee)
+    billing_histories << billing_history_view(performance, play, play_admission_fee)
 
     total_statement_amount += play_admission_fee
   end
@@ -69,19 +69,22 @@ def result_view(total_statement_amount, point_amount, invoice, billing_histories
   result = "청구 내역 (고객명: #{invoice[:customer]})\n"
 
   # 청구 내역 리스트
-  result += billing_histories
+  result += billing_histories.map { |billing_history| "  #{billing_history}\n" }.join
 
-  result += "총액: $#{'%.2f' % (total_statement_amount / 100)}\n"
+  result += "총액: $#{'%.2f' % won_to_dollar(total_statement_amount)}\n"
   result += "적립 포인트: #{point_amount}점\n"
 
   result
 end
 
-def billing_history_view(perf, play, play_admission_fee)
+def billing_history_view(performance, play, play_admission_fee)
   # 청구 내역을 출력한다.
-  "  #{play[:name]}: $#{'%.2f' % (play_admission_fee / 100)} (#{perf[:audience]}석)\n"
+  "#{play[:name]}: $#{'%.2f' % won_to_dollar(play_admission_fee)} (#{performance[:audience]}석)"
 end
 
+def won_to_dollar(money)
+  (money / 100).to_f
+end
 
 # data
 invoices = JSON.parse(File.read('./invoices.json'), symbolize_names: true)
