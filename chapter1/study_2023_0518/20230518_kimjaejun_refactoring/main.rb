@@ -1,5 +1,22 @@
 require 'json'
 
+module Play
+  module Type
+    TRAGEDY = "tragedy"
+    COMEDY = "comedy"
+  end
+end
+
+module Fee
+  module Tragedy
+    BASIC = 40000
+  end
+
+  module Comedy
+    BASIC = 30000
+  end
+end
+
 def statement(invoice, plays)
   total_statement_amount = 0
   point_amount = 0
@@ -10,7 +27,7 @@ def statement(invoice, plays)
     play = plays[play_id]
 
     # 금액 계산
-    play_admission_fee = calculate_amount(performance, play)
+    play_admission_fee = calculate_admission_fee(performance, play)
 
     # 포인트 적립
     point_amount += accumulate_points(performance, play)
@@ -33,26 +50,19 @@ def accumulate_points(performance, play)
   this_point_amount.to_i + this_additional_point.to_i
 end
 
-def calculate_amount(perf, play)
-  this_amount = 0
-
+def calculate_admission_fee(performance, play)
   case play[:type]
-  when "tragedy"
-    this_amount = 40000
-    if perf[:audience] > 30
-      this_amount += 1000 * (perf[:audience] - 30)
-    end
-  when "comedy"
-    this_amount = 30000
-    if perf[:audience] > 20
-      this_amount += 10000 + 500 * (perf[:audience] - 20)
-    end
-    this_amount += 300 * perf[:audience]
+  when Play::Type::TRAGEDY
+    admission_fee = Fee::Tragedy::BASIC
+    admission_fee += 1000 * (performance[:audience] - 30) if performance[:audience] > 30
+  when Play::Type::COMEDY
+    admission_fee = Fee::Comedy::BASIC + (300 * performance[:audience])
+    admission_fee += 10000 + 500 * (performance[:audience] - 20) if performance[:audience] > 20
   else
     raise "알 수 없는 장르: #{play[:type]}"
   end
 
-  this_amount
+  admission_fee
 end
 
 def result_view(total_statement_amount, point_amount, invoice, billing_histories)
