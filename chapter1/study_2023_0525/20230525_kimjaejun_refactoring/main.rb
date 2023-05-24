@@ -1,29 +1,34 @@
 require 'json'
 require_relative './play'
 require_relative './cost'
+require_relative './invoice_view'
+
+include InvoiceView
 
 def statement(invoice, plays)
   total_amount = 0
-  result = "청구 내역 (고객명: #{invoice[:customer]})\n"
+  invoice_histories = []
+  result_view_hash = { customer: invoice[:customer] }
 
   invoice[:performances].each do |perf|
     play = plays[perf[:playID].to_sym]
 
-    # 연극 관람료 계산
+    # 연극 관람료 계산 (단위는 penny)
     play_cost = get_play_cost(play, perf)
 
-    # 청구 내역을 출력한다.
-    result += "  #{play[:name]}: $#{'%.2f' % (play_cost / 100)} (#{perf[:audience]}석)\n"
+    # 출력할 청구내역 정보 저장
+    invoice_histories << { name: play[:name], cost: play_cost.to_f, seats: perf[:audience] }
     total_amount += play_cost
   end
 
   # 포인트는 따로 총 적립
   total_points = get_total_points(invoice[:performances], plays)
 
-  result += "총액: $#{'%.2f' % (total_amount / 100)}\n"
-  result += "적립 포인트: #{total_points}점\n"
+  result_view_hash[:invoice_histories] = invoice_histories
+  result_view_hash[:total_cost] = total_amount.to_f
+  result_view_hash[:total_points] = total_points
 
-  result
+  invoice_result_view(result_view_hash)
 end
 
 private
