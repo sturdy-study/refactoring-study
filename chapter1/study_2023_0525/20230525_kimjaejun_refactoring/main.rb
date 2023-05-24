@@ -6,32 +6,40 @@ require_relative './invoice_view'
 include InvoiceView
 
 def statement(invoice, plays)
-  total_amount = 0
   invoice_histories = []
-  result_view_hash = { customer: invoice[:customer] }
 
-  invoice[:performances].each do |perf|
-    play = plays[perf[:playID].to_sym]
+  invoice[:performances].each do |performance|
+    play = plays[performance[:playID].to_sym]
 
     # 연극 관람료 계산 (단위는 penny)
-    play_cost = get_play_cost(play, perf)
+    play_cost = get_play_cost_by_type(play[:type], performance)
 
     # 출력할 청구내역 정보 저장
-    invoice_histories << { name: play[:name], cost: play_cost.to_f, seats: perf[:audience] }
-    total_amount += play_cost
+    invoice_histories << { name: play[:name], cost: play_cost.to_f, seats: performance[:audience] }
   end
 
-  # 포인트는 따로 총 적립
+  # 총 적립 포인트는 따로 계산
   total_points = get_total_points(invoice[:performances], plays)
 
-  result_view_hash[:invoice_histories] = invoice_histories
-  result_view_hash[:total_cost] = total_amount.to_f
-  result_view_hash[:total_points] = total_points
-
-  invoice_result_view(result_view_hash)
+  # 사용자의 청구내역 정보
+  {
+    customer: invoice[:customer],
+    invoice_histories: invoice_histories,
+    total_cost: get_total_cost(invoice_histories),
+    total_points: total_points
+  }
 end
 
 private
+
+def get_total_cost(invoice_histories)
+  total_cost = 0
+  invoice_histories.each do |invoice_history|
+    total_cost += invoice_history[:cost]
+  end
+
+  total_cost.to_f
+end
 
 def get_total_points(performances, plays)
   points = 0
@@ -47,14 +55,14 @@ def get_total_points(performances, plays)
   points
 end
 
-def get_play_cost(play, performance)
-  case play[:type]
+def get_play_cost_by_type(play_type, performance)
+  case play_type
   when Play::Type::TRAGEDY
     get_tragedy_cost(performance)
   when Play::Type::COMEDY
     get_comedy_cost(performance)
   else
-    raise "알 수 없는 장르: #{play[:type]}"
+    raise "알 수 없는 장르: #{play_type}"
   end
 end
 
@@ -76,5 +84,6 @@ invoices = JSON.parse(File.read('./invoices.json'), symbolize_names: true)
 plays = JSON.parse(File.read('./plays.json'), symbolize_names: true)
 
 invoices.each do |invoice|
-  puts statement invoice, plays
+  statement_result = statement(invoice, plays)
+  puts invoice_result_view(statement_result)
 end
